@@ -286,7 +286,7 @@ def setup_vscode_settings():
             "PATH": "${env:PATH}:${workspaceFolder}/venv/bin"
         },
         "python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
-        "python.terminal.activateEnvironment": true,
+        "python.terminal.activateEnvironment": True,
     }
 
     with open(vscode_dir / "settings.json", "w", encoding="utf-8") as f:
