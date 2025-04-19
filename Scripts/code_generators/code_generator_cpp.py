@@ -67,6 +67,13 @@ class CppCodeGenerator(CodeGenerator):
                 "    // 请添加测试用例",
                 '    cout << "所有测试用例通过！" << endl;',
                 "}",
+                "",
+                "// 主函数",
+                "int main()",
+                "{",
+                "    test_solution();",
+                "    return 0;",
+                "}",
             ]
             return "\n".join(test_code)
 
@@ -104,6 +111,14 @@ class CppCodeGenerator(CodeGenerator):
         test_code.extend(test_statements)
         test_code.append("}")
 
+        # 添加main函数
+        test_code.append("\n// 主函数")
+        test_code.append("int main()")
+        test_code.append("{")
+        test_code.append("    test_solution();")
+        test_code.append("    return 0;")
+        test_code.append("}")
+
         return "\n".join(test_code)
 
     def replace_solution_class(self, template, code_snippet):
@@ -111,6 +126,12 @@ class CppCodeGenerator(CodeGenerator):
         if "class Solution" in template and "class Solution" in code_snippet:
             # 确保代码片段不包含多余的分号
             code_snippet = code_snippet.rstrip(";")
+            # 确保代码片段以分号结尾
+            if not code_snippet.endswith("}"):
+                code_snippet = code_snippet.rstrip() + ";"
+            elif not code_snippet.endswith("};"):
+                code_snippet = code_snippet.rstrip() + ";"
+
             # 使用更精确的正则表达式来匹配整个Solution类，包括大括号和可能的分号
             pattern = r"class\s+Solution\s*\{[^{]*?public:[^}]*?\};"
             if re.search(pattern, template, re.DOTALL):
@@ -145,15 +166,16 @@ class CppCodeGenerator(CodeGenerator):
             # 添加测试用例标题
             statements.append(f"\n    // 测试用例 {case_idx + 1}")
 
-            # 声明参数变量
+            # 声明参数变量，为每个测试用例添加索引编号，避免变量名重复
             for param in case_params:
-                param_name = param["name"]
+                param_name = param["name"] + f"_{case_idx + 1}"  # 添加测试用例编号
+                param["name"] = param_name  # 更新参数名称
                 param_type = param["type"]
                 param_value = param["value"]
                 cpp_type = self._get_cpp_type(param_type)
                 statements.append(f"    {cpp_type} {param_name} = {param_value};")
 
-            # 调用方法
+            # 调用方法，使用更新后的参数名
             param_names = [p["name"] for p in case_params]
 
             # 根据返回类型处理方法调用
@@ -168,28 +190,28 @@ class CppCodeGenerator(CodeGenerator):
                     if param_type.endswith("[]"):
                         # 容器类型，使用to_string函数
                         statements.append(
-                            f'    cout << "输入: {param_name}=" << to_string({param_name}) << endl;'
+                            f'    cout << "输入: {param_name.split("_")[0]}=" << to_string({param_name}) << endl;'
                         )
                     elif param_type in ["ListNode", "TreeNode"]:
                         # 特殊数据结构
                         if param_type == "ListNode":
                             statements.append(
-                                f'    cout << "输入: {param_name}=" << linkedListToString({param_name}) << endl;'
+                                f'    cout << "输入: {param_name.split("_")[0]}=" << linkedListToString({param_name}) << endl;'
                             )
                         else:
                             statements.append(
-                                f'    cout << "输入: {param_name}=" << binaryTreeToString({param_name}) << endl;'
+                                f'    cout << "输入: {param_name.split("_")[0]}=" << binaryTreeToString({param_name}) << endl;'
                             )
                     else:
                         # 基本类型直接输出
                         statements.append(
-                            f'    cout << "输入: {param_name}=" << {param_name} << endl;'
+                            f'    cout << "输入: {param_name.split("_")[0]}=" << {param_name} << endl;'
                         )
                 # 没有结果显示
                 statements.append(f'    cout << "输出: void函数，无返回值" << endl;')
             else:
                 statements.append(
-                    f"    auto result = sol.{method_name}({', '.join(param_names)});"
+                    f"    auto result_{case_idx + 1} = sol.{method_name}({', '.join(param_names)});"
                 )
                 statements.append(f'    cout << "测试用例 {case_idx + 1}:" << endl;')
                 for param in case_params:
@@ -199,22 +221,22 @@ class CppCodeGenerator(CodeGenerator):
                     if param_type.endswith("[]"):
                         # 容器类型，使用to_string函数
                         statements.append(
-                            f'    cout << "输入: {param_name}=" << to_string({param_name}) << endl;'
+                            f'    cout << "输入: {param_name.split("_")[0]}=" << to_string({param_name}) << endl;'
                         )
                     elif param_type in ["ListNode", "TreeNode"]:
                         # 特殊数据结构
                         if param_type == "ListNode":
                             statements.append(
-                                f'    cout << "输入: {param_name}=" << linkedListToString({param_name}) << endl;'
+                                f'    cout << "输入: {param_name.split("_")[0]}=" << linkedListToString({param_name}) << endl;'
                             )
                         else:
                             statements.append(
-                                f'    cout << "输入: {param_name}=" << binaryTreeToString({param_name}) << endl;'
+                                f'    cout << "输入: {param_name.split("_")[0]}=" << binaryTreeToString({param_name}) << endl;'
                             )
                     else:
                         # 基本类型直接输出
                         statements.append(
-                            f'    cout << "输入: {param_name}=" << {param_name} << endl;'
+                            f'    cout << "输入: {param_name.split("_")[0]}=" << {param_name} << endl;'
                         )
 
                 # 添加注释格式的期望输出值，便于正则提取
@@ -227,19 +249,21 @@ class CppCodeGenerator(CodeGenerator):
                 # 检查返回类型是否也需要特殊处理
                 if return_type.endswith("[]"):
                     statements.append(
-                        f'    cout << "输出: " << to_string(result) << endl;'
+                        f'    cout << "输出: " << to_string(result_{case_idx + 1}) << endl;'
                     )
                 elif return_type in ["ListNode", "TreeNode"]:
                     if return_type == "ListNode":
                         statements.append(
-                            f'    cout << "输出: " << linkedListToString(result) << endl;'
+                            f'    cout << "输出: " << linkedListToString(result_{case_idx + 1}) << endl;'
                         )
                     else:
                         statements.append(
-                            f'    cout << "输出: " << binaryTreeToString(result) << endl;'
+                            f'    cout << "输出: " << binaryTreeToString(result_{case_idx + 1}) << endl;'
                         )
                 else:
-                    statements.append(f'    cout << "输出: " << result << endl;')
+                    statements.append(
+                        f'    cout << "输出: " << result_{case_idx + 1} << endl;'
+                    )
 
             if expected_output:
                 # 格式化期望输出为字符串，确保正确显示
@@ -255,10 +279,12 @@ class CppCodeGenerator(CodeGenerator):
                     and expected_output.endswith("]")
                 ):
                     # 数组类型的比较需要特殊处理
-                    statements.append(f"    string result_str = to_string(result);")
+                    statements.append(
+                        f"    string result_str_{case_idx + 1} = to_string(result_{case_idx + 1});"
+                    )
                     statements.append(f"    // 对于数组类型，需要进行元素级别的比较")
                     statements.append(
-                        f'    assert(to_string(result) == "{processed_expected}" || [&](){{'
+                        f'    assert(to_string(result_{case_idx + 1}) == "{processed_expected}" || [&](){{'
                     )
                     statements.append(f"        // 打印结果与期望值比较")
                     statements.append(
@@ -270,7 +296,7 @@ class CppCodeGenerator(CodeGenerator):
                     # 其他简单类型可以直接比较字符串形式
                     statements.append(f"    // 转换为字符串进行比较")
                     statements.append(
-                        f'    assert(to_string(result) == "{processed_expected}");'
+                        f'    assert(to_string(result_{case_idx + 1}) == "{processed_expected}");'
                     )
                 statements.append(f'    cout << "通过!" << endl << endl;')
             else:
