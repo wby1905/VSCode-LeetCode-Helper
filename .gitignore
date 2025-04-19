@@ -30,6 +30,7 @@ pip-delete-this-directory.txt
 *.lo
 
 # IDE相关
+.github/
 .idea/
 .vscode/
 .vs/

@@ -17,6 +17,8 @@
 - 🗂️ **标签分类**：按照题目标签和难度进行分类
 - 🧪 **测试用例**：自动生成测试代码和测试用例
 - 📤 **代码提取**：自动提取符合提交格式的代码片段
+- 🔗 **自动跳转**：代码提取后自动打开浏览器跳转到题目页面
+- 🔍 **智能识别**：智能识别当前文件，无需手动输入题号和语言
 
 ## 🚀 使用方法
 
@@ -65,11 +67,22 @@ python Scripts/test_solution.py <题号> [语言]
 ### 提取提交代码
 
 ```bash
-python Scripts/test_solution.py <题号> [语言] --extract
+python Scripts/test_solution.py <题号> [语言] --extract [--open]
 ```
 
 **示例：**
 - `python Scripts/test_solution.py 100 py --extract` - 提取可提交到LeetCode的Python代码
+- `python Scripts/test_solution.py 100 py --extract --open` - 提取代码并自动跳转到题目页面
+
+### 从当前文件提取代码
+
+```bash
+python Scripts/extract_current.py [--open]
+```
+
+**示例：**
+- `python Scripts/extract_current.py` - 自动识别当前文件并提取代码
+- `python Scripts/extract_current.py --open` - 自动识别当前文件并提取代码，然后跳转到题目页面
 
 ## 📂 目录结构
 
@@ -79,6 +92,7 @@ LeetCode/
 │   ├── code_generators/   # 代码生成器
 │   ├── create_problem.py  # 创建题目脚本
 │   ├── daily_question.py  # 获取每日一题脚本
+│   ├── extract_current.py # 当前文件代码提取脚本
 │   ├── leetcode_api.py    # LeetCode API客户端
 │   ├── setup_environment.py # 环境配置脚本
 │   └── test_solution.py   # 测试解决方案脚本
@@ -101,7 +115,18 @@ LeetCode/
 ✅ **LeetCode: 创建题目** - 创建新的LeetCode题目  
 ✅ **LeetCode: 获取每日一题** - 获取今天的LeetCode每日一题  
 ✅ **LeetCode: 测试解决方案** - 测试LeetCode解决方案  
-✅ **LeetCode: 提取提交代码** - 提取用于提交的代码片段  
+✅ **LeetCode: 提取提交代码** - 提取用于提交的代码并自动跳转  
+✅ **LeetCode: 提取当前文件代码** - 智能识别当前文件并提取代码  
+
+## 💡 工作流程示例
+
+最佳实践工作流程：
+
+1. 使用创建题目任务：`LeetCode: 创建题目`
+2. 在生成的文件中编写解题代码
+3. 使用测试解决方案任务：`LeetCode: 测试解决方案`
+4. 代码通过测试后，使用提取当前文件代码任务：`LeetCode: 提取当前文件代码`
+5. 自动跳转到题目页面并粘贴代码提交
 
 ## 💻 编程环境要求
 

@@ -228,18 +228,49 @@ class PythonCodeGenerator(CodeGenerator):
             else:
                 statements.append(f"    # 输出：无")
 
-            # 改进输出方式
-            statements.append(f"    result_str = str(result)")
+            # 改进输出方式，处理列表格式问题
+            statements.append(
+                f"    # 处理结果格式，移除列表中逗号后的空格以匹配期望格式"
+            )
+            statements.append(f"    result_str = str(result).replace(', ', ',')")
             statements.append(f'    print(f"输出: {{result_str}}")')
 
             # 根据是否有期望输出决定是否显示验证信息
             if expected_output:
                 statements.append('    print("期望: ' + expected_output + '")')
+                # 修改比较逻辑，使用格式化后的结果字符串进行比较
                 statements.append(
-                    f'    print("通过!" if str(result) == \'{expected_output}\' else "失败!")'
+                    f'    print("通过!" if result_str == \'{expected_output}\' else "失败!")'
                 )
             else:
                 statements.append('    print("无期望值，请手动验证输出是否正确")')
+
+        # 添加真实的测试验证代码
+        statements.append("\n    # 验证所有测试用例是否真的通过")
+        statements.append("    all_cases_passed = True")
+
+        for case_idx, case in enumerate(parsed_cases):
+            if case.get("expected_output"):
+                case_params = case["params"]
+                param_names = [p["name"] for p in case_params]
+                param_values = [p["value"] for p in case_params]
+                expected_output = case["expected_output"]
+
+                # 添加实际验证逻辑
+                statements.append(f"\n    # 验证测试用例 {case_idx + 1}")
+                statements.append(
+                    f"    test_result = sol.{method_name}({', '.join(param_values)})"
+                )
+                statements.append(
+                    f"    test_result_str = str(test_result).replace(', ', ',')"
+                )
+                statements.append(f"    if test_result_str != '{expected_output}':")
+                statements.append(f"        all_cases_passed = False")
+
+        statements.append(
+            '\n    print("所有测试用例" + ("通过！" if all_cases_passed else "未通过，请检查算法实现！"))'
+        )
+        statements.append("    return all_cases_passed")
 
         return statements
 

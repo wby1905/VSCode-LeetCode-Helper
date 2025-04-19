@@ -4,9 +4,11 @@ LeetCode代码测试和提交工具
 用法:
     - 测试代码: python test_solution.py 题号 [语言]
     - 提取提交代码: python test_solution.py 题号 [语言] --extract
+    - 提取代码并自动跳转: python test_solution.py 题号 [语言] --extract --open
 示例:
     - python test_solution.py 100 cpp     # 测试第100题的C++解决方案
     - python test_solution.py 100 py --extract  # 提取第100题的Python解决方案用于提交
+    - python test_solution.py 100 py --extract --open  # 提取代码并自动打开题目页面
 支持的语言: cpp, py
 """
 
@@ -14,6 +16,7 @@ import os
 import sys
 import subprocess
 import re
+import webbrowser
 from pathlib import Path
 
 
@@ -37,6 +40,40 @@ def find_solution_file(problem_id, lang):
                     return solution_file
 
     return None
+
+
+def get_problem_url(problem_id, solution_file):
+    """获取题目的LeetCode链接
+
+    首先尝试从README文件中提取链接，
+    如果找不到，则根据题号生成标准链接
+    """
+    # 尝试从README中提取链接
+    readme_file = solution_file.parent / "README.md"
+    if readme_file.exists():
+        try:
+            with open(readme_file, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # 先尝试提取中文链接
+            cn_link_match = re.search(
+                r"中文链接: (https://leetcode\.cn/problems/[\w-]+/)", content
+            )
+            if cn_link_match:
+                return cn_link_match.group(1)
+
+            # 再尝试提取英文链接
+            link_match = re.search(
+                r"题目链接: (https://leetcode\.com/problems/[\w-]+/)", content
+            )
+            if link_match:
+                return link_match.group(1)
+        except Exception as e:
+            print(f"提取链接出错: {str(e)}")
+
+    # 如果没有找到链接，生成默认链接
+    # 优先使用中文链接
+    return f"https://leetcode.cn/problems/{problem_id}/"
 
 
 def test_solution(solution_file, lang):
@@ -100,7 +137,7 @@ def test_solution(solution_file, lang):
         return False
 
 
-def extract_solution(solution_file, lang):
+def extract_solution(solution_file, lang, problem_id, auto_open=False):
     """提取用于提交的解决方案代码"""
     if not solution_file.exists():
         print(f"错误: 找不到解决方案文件 {solution_file}")
@@ -128,6 +165,17 @@ def extract_solution(solution_file, lang):
                 except ImportError:
                     print("\n提示: 安装pyperclip包可以自动复制代码到剪贴板")
                     print("运行命令: pip install pyperclip")
+
+                # 获取题目链接
+                problem_url = get_problem_url(problem_id, solution_file)
+
+                if auto_open:
+                    # 自动打开浏览器跳转到题目页面
+                    print(f"\n正在自动打开浏览器，跳转到LeetCode题目页面...")
+                    webbrowser.open(problem_url)
+                else:
+                    # 显示可点击的题目链接
+                    print(f"\n【点击链接前往提交】: {problem_url}")
             else:
                 print("错误: 无法提取Solution类")
 
@@ -150,6 +198,17 @@ def extract_solution(solution_file, lang):
                 except ImportError:
                     print("\n提示: 安装pyperclip包可以自动复制代码到剪贴板")
                     print("运行命令: pip install pyperclip")
+
+                # 获取题目链接
+                problem_url = get_problem_url(problem_id, solution_file)
+
+                if auto_open:
+                    # 自动打开浏览器跳转到题目页面
+                    print(f"\n正在自动打开浏览器，跳转到LeetCode题目页面...")
+                    webbrowser.open(problem_url)
+                else:
+                    # 显示可点击的题目链接
+                    print(f"\n【点击链接前往提交】: {problem_url}")
             else:
                 print("错误: 无法提取Solution类")
 
@@ -163,13 +222,14 @@ def extract_solution(solution_file, lang):
 def main():
     """主函数"""
     if len(sys.argv) < 2:
-        print("用法: python test_solution.py 题号 [语言] [--extract]")
+        print("用法: python test_solution.py 题号 [语言] [--extract] [--open]")
         print("支持的语言: cpp, py")
         return
 
     problem_id = sys.argv[1]
     lang = sys.argv[2] if len(sys.argv) > 2 else "cpp"
     extract_mode = "--extract" in sys.argv
+    auto_open = "--open" in sys.argv
 
     if lang not in ["cpp", "py"]:
         print(f"不支持的语言: {lang}")
@@ -187,7 +247,7 @@ def main():
 
     if extract_mode:
         # 提取用于提交的代码
-        extract_solution(solution_file, lang)
+        extract_solution(solution_file, lang, problem_id, auto_open)
     else:
         # 测试解决方案
         success = test_solution(solution_file, lang)
@@ -196,6 +256,8 @@ def main():
             print("\n测试成功!")
             print("如果您希望提取用于提交的代码，请运行:")
             print(f"python test_solution.py {problem_id} {lang} --extract")
+            print("若要提取代码并自动打开浏览器，请运行:")
+            print(f"python test_solution.py {problem_id} {lang} --extract --open")
         else:
             print("\n测试失败，请检查代码并修复错误")
 

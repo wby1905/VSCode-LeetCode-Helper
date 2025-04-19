@@ -344,10 +344,23 @@ def setup_vscode_settings():
             {
                 "label": "LeetCode: 提取提交代码",
                 "type": "shell",
-                "command": "${workspaceFolder}\\venv\\Scripts\\python.exe Scripts/test_solution.py ${input:problemId} ${input:language} --extract",
+                "command": "${workspaceFolder}\\venv\\Scripts\\python.exe Scripts/test_solution.py ${input:problemId} ${input:language} --extract --open",
                 "presentation": {"reveal": "always", "panel": "new"},
                 "problemMatcher": [],
                 "options": {"env": {"PYTHONPATH": "${workspaceFolder}"}},
+            },
+            {
+                "label": "LeetCode: 提取当前文件代码",
+                "type": "shell",
+                "command": "${workspaceFolder}\\venv\\Scripts\\python.exe Scripts/extract_current.py --open",
+                "presentation": {"reveal": "always", "panel": "new"},
+                "problemMatcher": [],
+                "options": {
+                    "env": {
+                        "PYTHONPATH": "${workspaceFolder}",
+                        "VSCODE_FILE": "${file}",
+                    }
+                },
             },
         ],
         "inputs": [
@@ -360,7 +373,7 @@ def setup_vscode_settings():
             {
                 "id": "language",
                 "description": "请选择编程语言",
-                "default": "all",
+                "default": "py",
                 "type": "pickString",
                 "options": ["cpp", "py", "all"],
             },
