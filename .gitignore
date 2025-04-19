@@ -1,0 +1,66 @@
+# Python相关
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.env
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+*.egg-info/
+.installed.cfg
+*.egg
+
+# C++相关
+*.exe
+*.out
+*.app
+*.o
+*.obj
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.la
+*.lo
+
+# IDE相关
+.idea/
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# 项目特定文件
+config.ini
+credentials.json
+.leetcode/
+cookie.json
+
+# 缓存文件
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 临时文件
+tmp/
+temp/
+*.log
+*.tmp
+
+# 个人文件
+todo.txt
+notes.md
+
+# 个人刷题记录 - 不上传具体题目解答
+Tags/*/
+# 但保留Tags目录本身
+!Tags/.gitkeep
